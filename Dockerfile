@@ -1,7 +1,7 @@
 # SCTR Railway API — Playwright Chromium included (official image)
 # Use this so /api/sctr-top30 works on Railway.
 
-FROM mcr.microsoft.com/playwright/python:v1.49.0-jammy
+FROM mcr.microsoft.com/playwright/python:v1.58.0-jammy
 
 WORKDIR /app
 
