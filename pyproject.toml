@@ -1,0 +1,20 @@
+[project]
+name = "sctr-railway-api"
+version = "0.1.0"
+description = "API: SCTR Top 30 scrape + yfinance 5D/20D/60D performance"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "playwright>=1.49.0",
+    "pandas>=2.2.0",
+    "lxml>=5.0.0",
+    "yfinance>=0.2.0",
+]
+
+[project.scripts]
+sctr-railway-api = "main:run"
+
+[dependency-groups]
+dev = []
