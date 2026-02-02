@@ -26,23 +26,23 @@ Other: `GET /` (service info), `GET /health` (health check), `GET /docs` (Swagge
 1. **[railway.app](https://railway.app)** → sign in with GitHub.
 2. **New Project** → **Deploy from GitHub repo** → select **rolandtalk/sctr-railway-api**.
 3. In the service **Settings** → **Root Directory** → leave **empty** (this repo root is already the API).
-4. **Networking** → **Generate Domain** → copy the URL (e.g. `https://sctr-railway-api-production-xxxx.up.railway.app`).
+4. **Networking** → **Generate Domain** → copy the URL.
+
+**Your API domain:** `https://web-production-1b15c.up.railway.app`
 
 ---
 
 ## Test the API
 
-Replace `YOUR-RAILWAY-URL` with your generated domain.
-
 ```bash
-curl "https://YOUR-RAILWAY-URL/health"
-curl "https://YOUR-RAILWAY-URL/api/sctr-top30"
-curl "https://YOUR-RAILWAY-URL/api/price-performance?symbols=AAPL,MSFT,GOOGL"
-curl -X POST "https://YOUR-RAILWAY-URL/api/price-performance" -H "Content-Type: application/json" -d '["AAPL","MSFT","GOOGL"]'
-curl "https://YOUR-RAILWAY-URL/api/sctr-performance"
+curl "https://web-production-1b15c.up.railway.app/health"
+curl "https://web-production-1b15c.up.railway.app/api/sctr-top30"
+curl "https://web-production-1b15c.up.railway.app/api/price-performance?symbols=AAPL,MSFT,GOOGL"
+curl -X POST "https://web-production-1b15c.up.railway.app/api/price-performance" -H "Content-Type: application/json" -d '["AAPL","MSFT","GOOGL"]'
+curl "https://web-production-1b15c.up.railway.app/api/sctr-performance"
 ```
 
-**Docs:** `https://YOUR-RAILWAY-URL/docs`
+**Docs:** https://web-production-1b15c.up.railway.app/docs
 
 ---
 
@@ -61,7 +61,7 @@ Railway uses **railway.toml** and **Procfile** at repo root (Root Directory = em
 Set your API base URL (no trailing slash), e.g.:
 
 - **Name:** `VITE_API_URL`
-- **Value:** `https://YOUR-RAILWAY-URL`
+- **Value:** `https://web-production-1b15c.up.railway.app` (no trailing slash)
 
 ---
 

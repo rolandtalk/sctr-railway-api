@@ -69,24 +69,22 @@ Railway will then use `sctr-railway-api/railway.toml` and `sctr-railway-api/Proc
 
 1. In the same service, open **Networking** (or **Settings** → **Networking**).
 2. Click **Generate Domain** (or **Add Public Domain**).
-3. Copy the URL (e.g. `https://sctr-railway-api-production-xxxx.up.railway.app`).  
-   This is your **API base URL** (no trailing slash).
+3. Copy the URL.  
+   **Your API domain:** `https://web-production-1b15c.up.railway.app` (no trailing slash).
 
 ---
 
 ## Step 6: Test the API
 
-Replace `YOUR-RAILWAY-URL` with the URL from Step 5.
-
 ```bash
-curl "https://YOUR-RAILWAY-URL/health"
+curl "https://web-production-1b15c.up.railway.app/health"
 # Expect: {"status":"ok"}
 
-curl "https://YOUR-RAILWAY-URL/api/price-performance?symbols=AAPL,MSFT"
+curl "https://web-production-1b15c.up.railway.app/api/price-performance?symbols=AAPL,MSFT"
 # Expect: JSON with perf5d, perf20d, perf60d
 ```
 
-**Swagger UI:** open in browser: `https://YOUR-RAILWAY-URL/docs`
+**Swagger UI:** https://web-production-1b15c.up.railway.app/docs
 
 ---
 
@@ -95,7 +93,7 @@ curl "https://YOUR-RAILWAY-URL/api/price-performance?symbols=AAPL,MSFT"
 In your frontend (e.g. Cloudflare Pages or Vite):
 
 - **Variable:** `VITE_API_URL` (or whatever your app uses)
-- **Value:** `https://YOUR-RAILWAY-URL` (no trailing slash)
+- **Value:** `https://web-production-1b15c.up.railway.app` (no trailing slash)
 
 Redeploy the frontend after setting the variable.
 
