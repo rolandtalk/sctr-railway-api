@@ -25,7 +25,7 @@ Other: `GET /` (service info), `GET /health` (health check), `GET /docs` (Swagge
 
 1. **[railway.app](https://railway.app)** → sign in with GitHub.
 2. **New Project** → **Deploy from GitHub repo** → select **rolandtalk/sctr-railway-api**.
-3. In the service **Settings** → **Root Directory** → **sctr-railway-api** (or leave empty if the repo root is already the API folder).
+3. In the service **Settings** → **Root Directory** → leave **empty** (this repo root is already the API).
 4. **Networking** → **Generate Domain** → copy the URL (e.g. `https://sctr-railway-api-production-xxxx.up.railway.app`).
 
 ---
@@ -48,7 +48,7 @@ curl "https://YOUR-RAILWAY-URL/api/sctr-performance"
 
 ## Build / start (from config)
 
-Railway uses **sctr-railway-api/railway.toml** and **Procfile** when Root Directory = **sctr-railway-api**:
+Railway uses **railway.toml** and **Procfile** at repo root (Root Directory = empty):
 
 - **Build:** `pip install -r requirements.txt && playwright install chromium`
 - **Start:** `uvicorn main:app --host 0.0.0.0 --port $PORT`

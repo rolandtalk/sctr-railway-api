@@ -1,4 +1,4 @@
-# Railway config — set Root Directory = sctr-railway-api in the Railway dashboard
+# Railway config — Root Directory = empty (repo root is the API)
 
 [build]
 buildCommand = "pip install -r requirements.txt && playwright install chromium"
