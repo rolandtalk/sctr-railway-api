@@ -20,7 +20,8 @@ app = FastAPI(title="SCTR Picks API", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://sctrpicks.pages.dev",  # add your frontend origin if different
+        "https://sctrpicks.pages.dev",
+        "https://srankpicks.pages.dev",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ],
