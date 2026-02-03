@@ -1,19 +1,18 @@
-# SCTR Railway API — Playwright Chromium included (official image)
-# Use this so /api/sctr-top30 works on Railway.
-
-FROM mcr.microsoft.com/playwright/python:v1.58.0-jammy
+# Slim image: python-slim + Chromium only (smaller than full Playwright image)
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install Python deps (playwright already in base image; we add the rest)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# App code
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
+    && playwright install chromium --with-deps
+
 COPY main.py fetch_sctr.py ./
 COPY pyproject.toml ./
 
-# Railway sets PORT at runtime; default for local run
 ENV PORT=8000
 EXPOSE 8000
 CMD ["/bin/sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]

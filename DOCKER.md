@@ -1,6 +1,6 @@
 # How to use the Dockerfile
 
-The Dockerfile uses the **Playwright official Python image** so Chromium is included and `/api/sctr-top30` works.
+The Dockerfile uses **python:3.12-slim** + Chromium only (smaller than the full Playwright image) so `/api/sctr-top30` works.
 
 ---
 
@@ -55,6 +55,16 @@ docker logs -f sctr-api
 docker stop sctr-api
 docker rm sctr-api
 ```
+
+---
+
+## Troubleshooting: Railway build timeout
+
+If Railway times out during "importing to docker":
+
+1. **Slim image:** The Dockerfile uses python-slim + Chromium only (not the full Playwright image) to reduce size.
+2. **Excluded files:** `.dockerignore` excludes `srankpicks/`, `node_modules`, etc. to speed up context upload.
+3. **Fallback:** If it still times out, try Railway's **native build** (no Docker): in Settings → Build → disable "Use Dockerfile", or temporarily rename `Dockerfile` to `Dockerfile.bak`. Railway will use `railway.toml` build commands. Note: Playwright on Nixpacks may require additional config.
 
 ---
 
