@@ -1,6 +1,9 @@
 import type { SctrPerformanceResponse, PricePerformanceResponse } from './types'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// VITE_API_URL must be set at build time in Cloudflare (e.g. your Railway URL)
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? 'https://web-production-1b15c.up.railway.app' : 'http://localhost:8000')
 
 export async function fetchSctrPerformance(): Promise<SctrPerformanceResponse> {
   const res = await fetch(`${API_BASE}/api/sctr-performance`)

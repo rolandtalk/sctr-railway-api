@@ -45,7 +45,11 @@ function App() {
         const qqqRow = qqqRes.data.find((r) => r.symbol === 'QQQ')
         setQqq(qqqRow ? { perf5d: qqqRow.perf5d, perf20d: qqqRow.perf20d, perf60d: qqqRow.perf60d } : null)
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load data')
+        const msg = e instanceof Error ? e.message : 'Failed to load data'
+        setError(
+          msg +
+            '. Check that the API is running and VITE_API_URL is set in Cloudflare.',
+        )
       } finally {
         setLoading(false)
       }
