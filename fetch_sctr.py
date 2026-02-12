@@ -1,5 +1,5 @@
 """
-Fetch SCTR Top 30 using Playwright. Inlined for sctr-railway-api deploy (no parent dependency).
+Fetch SCTR Top 60 using Playwright. Inlined for sctr-railway-api deploy (no parent dependency).
 """
 import io
 
@@ -7,9 +7,10 @@ import pandas as pd
 from playwright.sync_api import sync_playwright
 
 SCTR_URL = "https://stockcharts.com/freecharts/sctr.html"
-TABLE_READY_JS = "() => document.querySelectorAll('table tbody tr').length >= 30"
+SCTR_TOP_N = 60
+TABLE_READY_JS = f"() => document.querySelectorAll('table tbody tr').length >= {SCTR_TOP_N}"
 PAGE_LOAD_TIMEOUT_MS = 30 * 1000
-TABLE_WAIT_TIMEOUT_MS = 20 * 1000
+TABLE_WAIT_TIMEOUT_MS = 25 * 1000
 
 
 def _block_heavy_resources(route):
@@ -19,8 +20,8 @@ def _block_heavy_resources(route):
     route.continue_()
 
 
-def fetch_sctr_top30() -> list[dict]:
-    """Fetch SCTR Top 30 from StockCharts. Returns list of dicts for JSON/API use."""
+def fetch_sctr_top60() -> list[dict]:
+    """Fetch SCTR Top 60 from StockCharts. Returns list of dicts for JSON/API use."""
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=True,
@@ -43,5 +44,5 @@ def fetch_sctr_top30() -> list[dict]:
 
     rankings = pd.read_html(io.StringIO(table_html))[0]
     rankings = rankings.dropna(axis=1, how="all")
-    top30 = rankings.head(30)
-    return top30.to_dict(orient="records")
+    top60 = rankings.head(SCTR_TOP_N)
+    return top60.to_dict(orient="records")

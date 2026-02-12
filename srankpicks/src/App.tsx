@@ -183,7 +183,7 @@ function App() {
   return (
     <div className="app">
       <header>
-        <h1>30 Best Srank Picks</h1>
+        <h1>60 Best Srank Picks</h1>
       </header>
 
       <main>

@@ -13,7 +13,7 @@ import yfinance as yf
 from fastapi import Body, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from fetch_sctr import fetch_sctr_top30
+from fetch_sctr import fetch_sctr_top60
 
 app = FastAPI(title="SCTR Picks API", version="0.1.0")
 
@@ -169,13 +169,14 @@ def health():
 # ---------------------------------------------------------------------------
 
 @app.get("/api/sctr-top30")
-def api_sctr_top30():
+@app.get("/api/sctr-top60")
+def api_sctr_top60():
     """
-    Scrape StockCharts SCTR page and return top 30 symbols only.
+    Scrape StockCharts SCTR page and return top 60 symbols.
     If this fails, error response includes "stage": "scrape".
     """
     try:
-        rows = fetch_sctr_top30()
+        rows = fetch_sctr_top60()
         result = []
         for i, row in enumerate(rows, start=1):
             symbol = row.get("Symbol") or row.get("symbol") or ""
@@ -246,12 +247,12 @@ def _compute_price_performance(symbols: List[str]) -> dict:
 @app.get("/api/sctr-performance")
 def sctr_performance():
     """
-    Scrape StockCharts SCTR Top 30, then compute 5D/20D/60D % for each symbol via yfinance.
-    Returns list of { rank, symbol, name?, perf5d, perf20d, perf60d }.
+    Scrape StockCharts SCTR Top 60, then compute 5D/20D/60D % for each symbol via yfinance.
+    Returns list of { rank, symbol, name?, perf1d, perf5d, perf20d, perf60d }.
     On failure, detail includes "stage": "scrape" or "performance" so you know which step failed.
     """
     try:
-        rows = fetch_sctr_top30()
+        rows = fetch_sctr_top60()
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -287,11 +288,11 @@ def sctr_performance():
 @app.get("/api/rebound-index")
 def api_rebound_index():
     """
-    SCTR Top 30 with Rebound Index (RI), (D5-D1) gain ratio, and RSI(14).
+    SCTR Top 60 with Rebound Index (RI), (D5-D1) gain ratio, and RSI(14).
     RI = (P1-PL)/PL * (P5-PL)/PL * 1e6; P1=first of 5D, P5=last, PL=low in 5D.
     """
     try:
-        rows = fetch_sctr_top30()
+        rows = fetch_sctr_top60()
     except Exception as e:
         raise HTTPException(
             status_code=500,
