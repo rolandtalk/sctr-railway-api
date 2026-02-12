@@ -63,6 +63,25 @@ main {
   background: var(--surface);
 }
 
+/* Main performance table & REF: align numeric columns right so headers and data line up */
+.table-wrap:not(.rebound-table) th:not(.rank-symbol),
+.table-wrap:not(.rebound-table) td:not(.rank-symbol) {
+  text-align: right;
+}
+
+.table-wrap:not(.rebound-table) th.rank-symbol,
+.table-wrap:not(.rebound-table) td.rank-symbol {
+  text-align: left;
+}
+
+/* Right-align header sort buttons so they line up with data in production (no flex on th) */
+.table-wrap:not(.rebound-table) th:not(.rank-symbol) .sort-btn,
+.rebound-table th:not(.rank-symbol) .sort-btn {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .table-title {
   font-size: 1.1rem;
   font-weight: 600;
