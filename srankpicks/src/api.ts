@@ -1,4 +1,4 @@
-import type { SctrPerformanceResponse, PricePerformanceResponse } from './types'
+import type { SctrPerformanceResponse, PricePerformanceResponse, ReboundIndexResponse } from './types'
 
 // VITE_API_URL must be set at build time in Cloudflare (e.g. your Railway URL)
 const API_BASE =
@@ -16,6 +16,15 @@ export async function fetchSctrPerformance(): Promise<SctrPerformanceResponse> {
 
 export async function fetchQqqPerformance(): Promise<PricePerformanceResponse> {
   const res = await fetch(`${API_BASE}/api/price-performance?symbols=QQQ`)
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail?.error || `API error: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function fetchReboundIndex(): Promise<ReboundIndexResponse> {
+  const res = await fetch(`${API_BASE}/api/rebound-index`)
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail?.error || `API error: ${res.status}`)

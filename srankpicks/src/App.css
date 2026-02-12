@@ -63,6 +63,27 @@ main {
   background: var(--surface);
 }
 
+.table-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+  color: var(--text);
+}
+
+.rebound-table {
+  margin-top: 2rem;
+}
+
+.rebound-table th:not(.rank-symbol),
+.rebound-table td.num {
+  text-align: right;
+}
+
+.rebound-table th.rank-symbol,
+.rebound-table td.rank-symbol {
+  text-align: left;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
