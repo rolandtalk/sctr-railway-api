@@ -63,8 +63,9 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDir, setSortDir] = useState<SortDir>('desc')
-  const [reboundSortKey, setReboundSortKey] = useState<ReboundSortKey | null>(null)
-  const [reboundSortDir, setReboundSortDir] = useState<SortDir>('desc')
+  // RI table: default sort by Curve column, order V → ↗ → Λ → ↘ (asc)
+  const [reboundSortKey, setReboundSortKey] = useState<ReboundSortKey | null>('curve_shape')
+  const [reboundSortDir, setReboundSortDir] = useState<SortDir>('asc')
 
   useEffect(() => {
     async function load() {
