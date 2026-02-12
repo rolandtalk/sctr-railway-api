@@ -192,6 +192,69 @@ function App() {
 
         {!loading && !error && (
           <>
+            <div className="table-wrap rebound-table">
+              <h2 className="table-title">Rebound Index (RI)</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th className="rank-symbol">
+                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('rank')}>
+                        RNK/SYM <ReboundSortIcon column="rank" sortKey={reboundSortKey} sortDir={reboundSortDir} />
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('curve_shape')}>
+                        Curve <ReboundSortIcon column="curve_shape" sortKey={reboundSortKey} sortDir={reboundSortDir} />
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('ri')}>
+                        RI <ReboundSortIcon column="ri" sortKey={reboundSortKey} sortDir={reboundSortDir} />
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('p1_pl')}>
+                        P1-PL <ReboundSortIcon column="p1_pl" sortKey={reboundSortKey} sortDir={reboundSortDir} />
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('p5_pl')}>
+                        P5-PL <ReboundSortIcon column="p5_pl" sortKey={reboundSortKey} sortDir={reboundSortDir} />
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('d5_d1_gain_ratio')}>
+                        (D5-D1) gain ratio <ReboundSortIcon column="d5_d1_gain_ratio" sortKey={reboundSortKey} sortDir={reboundSortDir} />
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('rsi_14')}>
+                        RSI (14D) <ReboundSortIcon column="rsi_14" sortKey={reboundSortKey} sortDir={reboundSortDir} />
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedReboundData.map((row) => (
+                    <tr key={row.symbol}>
+                      <td className="rank-symbol">
+                        <span className="rank">{row.rank}</span> {row.symbol}
+                      </td>
+                      <td className="num curve-cell" title={row.curve_shape ?? undefined}>
+                        {row.curve_shape ? CURVE_SYMBOL[row.curve_shape] : '—'}
+                      </td>
+                      <td className="num">{row.ri != null ? Math.round(row.ri).toLocaleString() : '—'}</td>
+                      <td className="num">{row.p1_pl != null ? row.p1_pl.toFixed(2) : '—'}</td>
+                      <td className="num">{row.p5_pl != null ? row.p5_pl.toFixed(2) : '—'}</td>
+                      <td className={`num ${row.d5_d1_gain_ratio != null && row.d5_d1_gain_ratio >= 0 ? 'positive' : row.d5_d1_gain_ratio != null ? 'negative' : ''}`}>
+                        {row.d5_d1_gain_ratio != null ? formatRatio(row.d5_d1_gain_ratio) : '—'}
+                      </td>
+                      <td className="num">{row.rsi_14 != null ? row.rsi_14.toFixed(1) : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             {qqq && (
               <div className="ref-window table-wrap">
                 <table>
@@ -253,69 +316,6 @@ function App() {
                       <PerfCell val={row.perf5d} />
                       <PerfCell val={row.perf20d} />
                       <PerfCell val={row.perf60d} />
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="table-wrap rebound-table">
-              <h2 className="table-title">Rebound Index (RI)</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th className="rank-symbol">
-                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('rank')}>
-                        RNK/SYM <ReboundSortIcon column="rank" sortKey={reboundSortKey} sortDir={reboundSortDir} />
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('curve_shape')}>
-                        Curve <ReboundSortIcon column="curve_shape" sortKey={reboundSortKey} sortDir={reboundSortDir} />
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('ri')}>
-                        RI <ReboundSortIcon column="ri" sortKey={reboundSortKey} sortDir={reboundSortDir} />
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('p1_pl')}>
-                        P1-PL <ReboundSortIcon column="p1_pl" sortKey={reboundSortKey} sortDir={reboundSortDir} />
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('p5_pl')}>
-                        P5-PL <ReboundSortIcon column="p5_pl" sortKey={reboundSortKey} sortDir={reboundSortDir} />
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('d5_d1_gain_ratio')}>
-                        (D5-D1) gain ratio <ReboundSortIcon column="d5_d1_gain_ratio" sortKey={reboundSortKey} sortDir={reboundSortDir} />
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" className="sort-btn" onClick={() => handleReboundSort('rsi_14')}>
-                        RSI (14D) <ReboundSortIcon column="rsi_14" sortKey={reboundSortKey} sortDir={reboundSortDir} />
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedReboundData.map((row) => (
-                    <tr key={row.symbol}>
-                      <td className="rank-symbol">
-                        <span className="rank">{row.rank}</span> {row.symbol}
-                      </td>
-                      <td className="num curve-cell" title={row.curve_shape ?? undefined}>
-                        {row.curve_shape ? CURVE_SYMBOL[row.curve_shape] : '—'}
-                      </td>
-                      <td className="num">{row.ri != null ? Math.round(row.ri).toLocaleString() : '—'}</td>
-                      <td className="num">{row.p1_pl != null ? row.p1_pl.toFixed(2) : '—'}</td>
-                      <td className="num">{row.p5_pl != null ? row.p5_pl.toFixed(2) : '—'}</td>
-                      <td className={`num ${row.d5_d1_gain_ratio != null && row.d5_d1_gain_ratio >= 0 ? 'positive' : row.d5_d1_gain_ratio != null ? 'negative' : ''}`}>
-                        {row.d5_d1_gain_ratio != null ? formatRatio(row.d5_d1_gain_ratio) : '—'}
-                      </td>
-                      <td className="num">{row.rsi_14 != null ? row.rsi_14.toFixed(1) : '—'}</td>
                     </tr>
                   ))}
                 </tbody>
