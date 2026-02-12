@@ -68,23 +68,29 @@ def _perf1d_from_yfinance(ticker: yf.Ticker, last_close_from_hist: Optional[floa
 
 
 def get_price_performance(symbol: str) -> Dict[str, Optional[float]]:
-    """Get 1D (Close–Previous Close %), 5D, 20D, 60D % for a symbol using yfinance."""
+    """Get 1D (Close–Previous Close %), 5D, 20D, 60D %, and RSI(14) for a symbol using yfinance."""
     ticker = yf.Ticker(symbol)
     hist = ticker.history(period="4mo")  # ~84 trading days
     if hist is None or len(hist) < TRADING_DAYS_60:
         perf1d = _perf1d_from_yfinance(ticker)
-        return {"perf1d": perf1d, "perf5d": None, "perf20d": None, "perf60d": None}
+        return {"perf1d": perf1d, "perf5d": None, "perf20d": None, "perf60d": None, "rsi_14": None}
     closes = hist["Close"].dropna()
     if len(closes) < TRADING_DAYS_60:
         perf1d = _perf1d_from_yfinance(ticker)
-        return {"perf1d": perf1d, "perf5d": None, "perf20d": None, "perf60d": None}
+        return {"perf1d": perf1d, "perf5d": None, "perf20d": None, "perf60d": None, "rsi_14": None}
     last = float(closes.iloc[-1])
+    # Convert to list of Python floats for RSI (avoids numpy serialization / type issues)
+    closes_list = [float(x) for x in closes.tolist()]
     # 1D: yfinance Close vs Previous Close (with history fallback for current close)
     perf1d = _perf1d_from_yfinance(ticker, last_close_from_hist=last)
     perf5d = _pct_change(last, float(closes.iloc[-TRADING_DAYS_5])) if len(closes) >= TRADING_DAYS_5 else None
     perf20d = _pct_change(last, float(closes.iloc[-TRADING_DAYS_20])) if len(closes) >= TRADING_DAYS_20 else None
     perf60d = _pct_change(last, float(closes.iloc[-TRADING_DAYS_60])) if len(closes) >= TRADING_DAYS_60 else None
-    return {"perf1d": perf1d, "perf5d": perf5d, "perf20d": perf20d, "perf60d": perf60d}
+    try:
+        rsi_14 = _rsi(closes_list, 14) if len(closes_list) >= 15 else None
+    except (TypeError, ValueError, ZeroDivisionError, IndexError):
+        rsi_14 = None
+    return {"perf1d": perf1d, "perf5d": perf5d, "perf20d": perf20d, "perf60d": perf60d, "rsi_14": rsi_14}
 
 
 # ---------------------------------------------------------------------------
@@ -272,6 +278,7 @@ def sctr_performance():
                 "perf5d": perf["perf5d"],
                 "perf20d": perf["perf20d"],
                 "perf60d": perf["perf60d"],
+                "rsi_14": perf["rsi_14"],
             })
     except Exception as e:
         raise HTTPException(

@@ -304,6 +304,11 @@ function App() {
                         60D <SortIcon column="perf60d" sortKey={sortKey} sortDir={sortDir} />
                       </button>
                     </th>
+                    <th>
+                      <button type="button" className="sort-btn" onClick={() => handleSort('rsi_14')}>
+                        RSI (14D) <SortIcon column="rsi_14" sortKey={sortKey} sortDir={sortDir} />
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -316,6 +321,7 @@ function App() {
                       <PerfCell val={row.perf5d} />
                       <PerfCell val={row.perf20d} />
                       <PerfCell val={row.perf60d} />
+                      <td className="num">{row.rsi_14 != null ? row.rsi_14.toFixed(1) : '—'}</td>
                     </tr>
                   ))}
                 </tbody>

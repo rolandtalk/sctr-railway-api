@@ -6,6 +6,7 @@ export interface SctrRow {
   perf5d: number | null
   perf20d: number | null
   perf60d: number | null
+  rsi_14: number | null
 }
 
 export interface SctrPerformanceResponse {
@@ -24,7 +25,7 @@ export interface PricePerformanceResponse {
   data: PricePerformanceRow[]
 }
 
-export type SortKey = 'perf1d' | 'perf5d' | 'perf20d' | 'perf60d'
+export type SortKey = 'perf1d' | 'perf5d' | 'perf20d' | 'perf60d' | 'rsi_14'
 export type SortDir = 'asc' | 'desc'
 
 export type CurveShape = 'v_shape' | 'way_up' | 'a_shape' | 'way_down'
