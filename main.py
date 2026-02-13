@@ -7,7 +7,8 @@ Two separate APIs for clear error attribution:
   - GET/POST /api/price-performance → yfinance only (stage: "performance")
 Combined: GET/POST /api/sctr-performance; errors include "stage" so you know which step failed.
 """
-from typing import Dict, List, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Dict, List, Optional
 
 import yfinance as yf
 from fastapi import Body, FastAPI, HTTPException
@@ -160,6 +161,75 @@ def get_rebound_data(symbol: str) -> Dict[str, Optional[float]]:
     return {"ri": ri, "p1_pl": p1_pl, "p5_pl": p5_pl, "d5_d1_gain_ratio": d5_d1, "rsi_14": rsi_14, "curve_shape": curve_shape}
 
 
+def get_symbol_data(symbol: str) -> Dict[str, Any]:
+    """
+    One yfinance history fetch per symbol; returns both perf and rebound data.
+    Used by /api/dashboard for parallel fetching (much faster than 2 calls × 60 symbols).
+    """
+    ticker = yf.Ticker(symbol)
+    hist = ticker.history(period="4mo")
+    if hist is None or len(hist) < TRADING_DAYS_60:
+        perf1d = _perf1d_from_yfinance(ticker)
+        return {
+            "perf": {"perf1d": perf1d, "perf5d": None, "perf20d": None, "perf60d": None, "rsi_14": None},
+            "rebound": {"ri": None, "p1_pl": None, "p5_pl": None, "d5_d1_gain_ratio": None, "rsi_14": None, "curve_shape": None},
+        }
+    closes = hist["Close"].dropna()
+    if len(closes) < TRADING_DAYS_60:
+        perf1d = _perf1d_from_yfinance(ticker)
+        return {
+            "perf": {"perf1d": perf1d, "perf5d": None, "perf20d": None, "perf60d": None, "rsi_14": None},
+            "rebound": {"ri": None, "p1_pl": None, "p5_pl": None, "d5_d1_gain_ratio": None, "rsi_14": None, "curve_shape": None},
+        }
+    last = float(closes.iloc[-1])
+    closes_list = [float(x) for x in closes.tolist()]
+    # Perf
+    perf1d = _perf1d_from_yfinance(ticker, last_close_from_hist=last)
+    perf5d = _pct_change(last, float(closes.iloc[-TRADING_DAYS_5])) if len(closes) >= TRADING_DAYS_5 else None
+    perf20d = _pct_change(last, float(closes.iloc[-TRADING_DAYS_20])) if len(closes) >= TRADING_DAYS_20 else None
+    perf60d = _pct_change(last, float(closes.iloc[-TRADING_DAYS_60])) if len(closes) >= TRADING_DAYS_60 else None
+    try:
+        rsi_14 = _rsi(closes_list, 14) if len(closes_list) >= 15 else None
+    except (TypeError, ValueError, ZeroDivisionError, IndexError):
+        rsi_14 = None
+    perf = {"perf1d": perf1d, "perf5d": perf5d, "perf20d": perf20d, "perf60d": perf60d, "rsi_14": rsi_14}
+    # Rebound from same closes (last 5 + curve)
+    if len(closes_list) < 15:
+        rebound = {"ri": None, "p1_pl": None, "p5_pl": None, "d5_d1_gain_ratio": None, "rsi_14": rsi_14, "curve_shape": None}
+    else:
+        p1 = closes_list[-REBOUND_DAYS]
+        p5 = closes_list[-1]
+        last5 = closes_list[-REBOUND_DAYS:]
+        pl = min(last5)
+        idx_min = min(range(REBOUND_DAYS), key=lambda i: last5[i])
+        idx_max = max(range(REBOUND_DAYS), key=lambda i: last5[i])
+        if idx_min in (1, 2, 3):
+            curve_shape = "v_shape"
+        elif idx_max in (1, 2, 3):
+            curve_shape = "a_shape"
+        elif idx_min == 0 and idx_max == 4:
+            curve_shape = "way_up"
+        elif idx_max == 0 and idx_min == 4:
+            curve_shape = "way_down"
+        else:
+            curve_shape = "way_up" if p5 >= p1 else "way_down"
+        if pl and pl > 0:
+            g1 = (p1 - pl) / pl
+            g5 = (p5 - pl) / pl
+            ri = round(g1 * g5 * 1_000_000, 2)
+            p1_pl = round(g1 * 1000, 2)
+            p5_pl = round(g5 * 1000, 2)
+        else:
+            ri = p1_pl = p5_pl = None
+        d5_d1 = round((p5 - p1) / p1, 4) if p1 and p1 != 0 else None
+        rebound = {"ri": ri, "p1_pl": p1_pl, "p5_pl": p5_pl, "d5_d1_gain_ratio": d5_d1, "rsi_14": rsi_14, "curve_shape": curve_shape}
+    return {"perf": perf, "rebound": rebound}
+
+
+# Parallel workers for dashboard (avoid rate limits; 12–16 is usually safe)
+DASHBOARD_WORKERS = 12
+
+
 @app.get("/")
 def root():
     return {"service": "sctr-railway-api", "docs": "/docs", "health": "/health"}
@@ -236,6 +306,7 @@ def _compute_price_performance(symbols: List[str]) -> dict:
                 "perf5d": perf["perf5d"],
                 "perf20d": perf["perf20d"],
                 "perf60d": perf["perf60d"],
+                "rsi_14": perf["rsi_14"],
             })
         return {"data": result, "stage": "performance"}
     except Exception as e:
@@ -243,6 +314,87 @@ def _compute_price_performance(symbols: List[str]) -> dict:
             status_code=500,
             detail={"error": str(e), "stage": "performance"},
         )
+
+
+# ---------------------------------------------------------------------------
+# 2b. Dashboard: one scrape + parallel yfinance (fast path for the web app)
+# ---------------------------------------------------------------------------
+
+@app.get("/api/dashboard")
+def api_dashboard():
+    """
+    Single endpoint for the web app: scrape once, then fetch all 60 symbols in parallel
+    (one history per symbol, both perf and rebound from it). Returns perf, rebound, qqq.
+    Much faster than calling sctr-performance and rebound-index separately (no duplicate
+    scrape, 1 yfinance call per symbol instead of 2, parallelized).
+    """
+    try:
+        rows = fetch_sctr_top60()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={"error": str(e), "stage": "scrape"},
+        )
+    symbols_with_meta = [
+        (i, row.get("Symbol") or row.get("symbol") or "", row.get("Name") or row.get("name") or "")
+        for i, row in enumerate(rows, start=1)
+    ]
+    symbols = [s[1] for s in symbols_with_meta if s[1]]
+    # Fetch all 60 in parallel (one history per symbol → perf + rebound)
+    perf_list: List[Dict[str, Any]] = []
+    rebound_list: List[Dict[str, Any]] = []
+    qqq_data: Optional[Dict[str, Any]] = None
+    with ThreadPoolExecutor(max_workers=DASHBOARD_WORKERS) as executor:
+        future_to_idx = {executor.submit(get_symbol_data, sym): (i, sym, name) for (i, sym, name) in symbols_with_meta if sym}
+        # QQQ not in top 60 → fetch separately in same pool
+        if "QQQ" not in symbols:
+            future_to_idx[executor.submit(get_symbol_data, "QQQ")] = (-1, "QQQ", "")
+        for future in as_completed(future_to_idx):
+            rank, symbol, name = future_to_idx[future]
+            try:
+                data = future.result()
+            except Exception:
+                data = {"perf": {"perf1d": None, "perf5d": None, "perf20d": None, "perf60d": None, "rsi_14": None}, "rebound": {"ri": None, "p1_pl": None, "p5_pl": None, "d5_d1_gain_ratio": None, "rsi_14": None, "curve_shape": None}}
+            if symbol == "QQQ":
+                qqq_data = data["perf"]
+                continue
+            perf_list.append({
+                "rank": rank,
+                "symbol": symbol,
+                "name": name,
+                "perf1d": data["perf"]["perf1d"],
+                "perf5d": data["perf"]["perf5d"],
+                "perf20d": data["perf"]["perf20d"],
+                "perf60d": data["perf"]["perf60d"],
+                "rsi_14": data["perf"]["rsi_14"],
+            })
+            rebound_list.append({
+                "rank": rank,
+                "symbol": symbol,
+                "name": name,
+                "ri": data["rebound"]["ri"],
+                "p1_pl": data["rebound"]["p1_pl"],
+                "p5_pl": data["rebound"]["p5_pl"],
+                "d5_d1_gain_ratio": data["rebound"]["d5_d1_gain_ratio"],
+                "rsi_14": data["rebound"]["rsi_14"],
+                "curve_shape": data["rebound"]["curve_shape"],
+            })
+    # Restore order by rank
+    perf_list.sort(key=lambda x: x["rank"])
+    rebound_list.sort(key=lambda x: x["rank"])
+    # If QQQ was in top 60, take its perf for qqq ref
+    if qqq_data is None:
+        for p in perf_list:
+            if p.get("symbol") == "QQQ":
+                qqq_data = {"perf1d": p.get("perf1d"), "perf5d": p.get("perf5d"), "perf20d": p.get("perf20d"), "perf60d": p.get("perf60d")}
+                break
+    return {
+        "data": {
+            "perf": perf_list,
+            "rebound": rebound_list,
+            "qqq": qqq_data or {},
+        },
+    }
 
 
 # ---------------------------------------------------------------------------

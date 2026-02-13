@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { fetchSctrPerformance, fetchQqqPerformance, fetchReboundIndex } from './api'
+import { fetchDashboard } from './api'
 import type { SctrRow, SortKey, SortDir, ReboundRow, ReboundSortKey, CurveShape } from './types'
 
 const CURVE_ORDER: CurveShape[] = ['v_shape', 'way_up', 'a_shape', 'way_down']
@@ -72,15 +72,14 @@ function App() {
       setLoading(true)
       setError(null)
       try {
-        const [perf, qqqRes, reboundRes] = await Promise.all([
-          fetchSctrPerformance(),
-          fetchQqqPerformance(),
-          fetchReboundIndex(),
-        ])
-        setData(perf.data)
-        setReboundData(reboundRes.data)
-        const qqqRow = qqqRes.data.find((r) => r.symbol === 'QQQ')
-        setQqq(qqqRow ? { perf1d: qqqRow.perf1d, perf5d: qqqRow.perf5d, perf20d: qqqRow.perf20d, perf60d: qqqRow.perf60d } : null)
+        const res = await fetchDashboard()
+        setData(res.data.perf)
+        setReboundData(res.data.rebound)
+        setQqq(
+          res.data.qqq && (res.data.qqq.perf1d != null || res.data.qqq.perf5d != null)
+            ? { perf1d: res.data.qqq.perf1d, perf5d: res.data.qqq.perf5d, perf20d: res.data.qqq.perf20d, perf60d: res.data.qqq.perf60d }
+            : null
+        )
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Failed to load data'
         setError(

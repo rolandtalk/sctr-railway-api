@@ -47,3 +47,11 @@ export type ReboundSortKey = 'rank' | 'ri' | 'p1_pl' | 'p5_pl' | 'd5_d1_gain_rat
 export interface ReboundIndexResponse {
   data: ReboundRow[]
 }
+
+export interface DashboardResponse {
+  data: {
+    perf: SctrRow[]
+    rebound: ReboundRow[]
+    qqq: { perf1d: number | null; perf5d: number | null; perf20d: number | null; perf60d: number | null }
+  }
+}
