@@ -54,6 +54,7 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const [sctrPage, setSctrPage] = useState(0)
   const [perfPage, setPerfPage] = useState(0)
   const [reboundPage, setReboundPage] = useState(0)
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
@@ -84,6 +85,7 @@ function App() {
     load()
   }, [])
 
+  const filteredSctr = useMemo(() => filterRows(data, search), [data, search])
   const filteredPerf = useMemo(() => filterRows(data, search), [data, search])
   const filteredRebound = useMemo(() => filterRows(reboundData, search), [reboundData, search])
 
@@ -114,8 +116,13 @@ function App() {
     })
   }, [filteredRebound, reboundSortKey, reboundSortDir])
 
+  const totalSctrPages = Math.max(1, Math.ceil(filteredSctr.length / PAGE_SIZE))
   const totalPerfPages = Math.max(1, Math.ceil(sortedData.length / PAGE_SIZE))
   const totalReboundPages = Math.max(1, Math.ceil(sortedReboundData.length / PAGE_SIZE))
+  const paginatedSctr = useMemo(
+    () => filteredSctr.slice(sctrPage * PAGE_SIZE, (sctrPage + 1) * PAGE_SIZE),
+    [filteredSctr, sctrPage]
+  )
   const paginatedPerf = useMemo(
     () => sortedData.slice(perfPage * PAGE_SIZE, (perfPage + 1) * PAGE_SIZE),
     [sortedData, perfPage]
@@ -125,6 +132,9 @@ function App() {
     [sortedReboundData, reboundPage]
   )
 
+  useEffect(() => {
+    setSctrPage((p) => Math.min(p, totalSctrPages - 1))
+  }, [totalSctrPages])
   useEffect(() => {
     setPerfPage((p) => Math.min(p, totalPerfPages - 1))
   }, [totalPerfPages])
@@ -230,12 +240,36 @@ function App() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value)
+                  setSctrPage(0)
                   setPerfPage(0)
                   setReboundPage(0)
                 }}
                 aria-label="Filter by symbol or name"
               />
-              {paginationUi(sortedData.length, perfPage, totalPerfPages, setPerfPage, 'Perf')}
+              {paginationUi(filteredSctr.length, sctrPage, totalSctrPages, setSctrPage, 'SCTR 300')}
+            </div>
+
+            <div className="table-wrap sctr-table">
+              <h2 className="table-title">SCTR Top 300</h2>
+              <p className="table-desc">300 best SCTR scores symbols from StockCharts (scrape).</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th className="rank-symbol">Rank</th>
+                    <th className="rank-symbol">Symbol</th>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedSctr.map((row) => (
+                    <tr key={`${row.rank}-${row.symbol}`}>
+                      <td className="rank-symbol"><span className="rank">{row.rank}</span></td>
+                      <td className="rank-symbol">{row.symbol}</td>
+                      <td>{row.name ?? '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
             <div className="table-wrap rebound-table">
@@ -331,6 +365,10 @@ function App() {
             )}
 
             <div className="table-wrap">
+              <h2 className="table-title">Performance (1D / 5D / 20D / 60D)</h2>
+              <div className="search-and-pagination">
+                {paginationUi(sortedData.length, perfPage, totalPerfPages, setPerfPage, 'Perf')}
+              </div>
               <table>
                 <thead>
                   <tr>

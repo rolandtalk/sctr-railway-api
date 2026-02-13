@@ -17,6 +17,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://300spicks-production.up.railway.app",
+        "https://300spicks.pages.dev",
         "https://sctrpicks.pages.dev",
         "https://srankpicks.pages.dev",
         "http://localhost:5173",
