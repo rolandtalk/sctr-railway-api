@@ -13,7 +13,7 @@ This repo has **two** parts: **frontend** (React in `web/`) and **API** (FastAPI
 ## Service 2: API (add this)
 
 1. In the same Railway project, click **+ New** → **GitHub Repo** → choose **300spicks** again (same repo).
-2. For this new service, leave **Root Directory** empty (repo root). Railway will see `requirements.txt` and `Procfile` and run the Python API.
+2. For this new service, set **Root Directory** to **`api`**. The `api/` folder has its own `requirements.txt` and `Procfile` for the Python API.
 3. After deploy, open the new service → **Settings** → copy its **public URL** (e.g. `https://300spicks-xxxx.up.railway.app`).
 
 ## Connect frontend to API
