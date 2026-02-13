@@ -2,6 +2,7 @@
 SCTR Picks API (300 stocks): Scrape StockCharts SCTR Top 300 + yfinance 5D/20D/60D performance.
 Same pattern as 60-symbol app; single /api/dashboard for one scrape + parallel yfinance.
 """
+import math
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
 
@@ -141,12 +142,13 @@ def get_symbol_data(symbol: str) -> Dict[str, Any]:
     except (TypeError, ValueError, ZeroDivisionError, IndexError):
         rsi_14 = None
     perf = {"perf1d": perf1d, "perf5d": perf5d, "perf20d": perf20d, "perf60d": perf60d, "rsi_14": rsi_14}
-    if len(closes_list) < 15:
+    # Rebound: need at least 5 closes for RI/curve; RSI needs 15+
+    if len(closes_list) < REBOUND_DAYS:
         rebound = {"ri": None, "p1_pl": None, "p5_pl": None, "d5_d1_gain_ratio": None, "rsi_14": rsi_14, "curve_shape": None}
     else:
-        p1 = closes_list[-REBOUND_DAYS]
-        p5 = closes_list[-1]
-        last5 = closes_list[-REBOUND_DAYS:]
+        p1 = float(closes_list[-REBOUND_DAYS])
+        p5 = float(closes_list[-1])
+        last5 = [float(x) for x in closes_list[-REBOUND_DAYS:]]
         pl = min(last5)
         idx_min = min(range(REBOUND_DAYS), key=lambda i: last5[i])
         idx_max = max(range(REBOUND_DAYS), key=lambda i: last5[i])
@@ -160,7 +162,7 @@ def get_symbol_data(symbol: str) -> Dict[str, Any]:
             curve_shape = "way_down"
         else:
             curve_shape = "way_up" if p5 >= p1 else "way_down"
-        if pl and pl > 0:
+        if pl is not None and not math.isnan(pl) and pl > 0:
             g1 = (p1 - pl) / pl
             g5 = (p5 - pl) / pl
             ri = round(g1 * g5 * 1_000_000, 2)
