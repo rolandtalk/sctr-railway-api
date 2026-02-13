@@ -6,3 +6,5 @@ __pycache__
 .playwright-browsers
 web/node_modules
 web/dist
+web/.env
+web/.env.local

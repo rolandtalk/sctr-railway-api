@@ -1,23 +1,26 @@
 # Deploy to Railway
 
-## Frontend (this app)
+This repo has **two** parts: **frontend** (React in `web/`) and **API** (FastAPI in `main.py`). Use **two Railway services** in the same project.
 
-1. **Push to GitHub** (if you haven’t already).
-2. In [Railway](https://railway.app), **New Project** → **Deploy from GitHub repo** → choose this repo.
-3. Set **Root Directory** to `web` (Settings → Source → Root Directory).
-4. Add a **variable** so the app can reach your API:
-   - Name: `VITE_API_URL`
-   - Value: your API URL, e.g. `https://your-api-service.up.railway.app`  
-   (No trailing slash. This is baked in at build time.)
-5. Deploy. Railway will run `npm install`, `npm run build`, then `npm start` (serves `dist/` with `serve`).
+---
 
-Your 300 Best SCTR Picks UI will be live at the generated Railway URL.
+## Service 1: Frontend (you already have this)
 
-## API (backend)
+- **Root Directory:** `web`
+- **URL:** e.g. `300spicks-production.up.railway.app`
+- Builds and serves the React app.
 
-If your dashboard API is a separate service (e.g. another repo):
+## Service 2: API (add this)
 
-- Deploy that repo to Railway as a **second service** in the same project (or another project).
-- Use that service’s public URL as `VITE_API_URL` in the frontend service above.
+1. In the same Railway project, click **+ New** → **GitHub Repo** → choose **300spicks** again (same repo).
+2. For this new service, leave **Root Directory** empty (repo root). Railway will see `requirements.txt` and `Procfile` and run the Python API.
+3. After deploy, open the new service → **Settings** → copy its **public URL** (e.g. `https://300spicks-xxxx.up.railway.app`).
 
-If the API and frontend are in the same repo (e.g. `api/` and `web/`), add two services and set each service’s Root Directory to `api` and `web` respectively.
+## Connect frontend to API
+
+1. Open **Service 1 (frontend)** → **Variables**.
+2. Add: **`VITE_API_URL`** = the API service URL from step 3 above (no trailing slash).  
+   Example: `https://300spicks-xxxx.up.railway.app`
+3. **Redeploy** the frontend service (Deployments → ⋮ → Redeploy) so the new variable is baked into the build.
+
+Then the live site at `300spicks-production.up.railway.app` will load data from your API.

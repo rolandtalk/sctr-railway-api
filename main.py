@@ -16,6 +16,7 @@ app = FastAPI(title="SCTR Picks API (300)", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://300spicks-production.up.railway.app",
         "https://sctrpicks.pages.dev",
         "https://srankpicks.pages.dev",
         "http://localhost:5173",
@@ -276,8 +277,10 @@ def api_dashboard():
 
 
 def run():
+    import os
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
 
 
 if __name__ == "__main__":
