@@ -1,15 +1,16 @@
-# Use official Playwright image: Playwright + Chromium at /ms-playwright.
-# We do NOT pip install playwright so we use the image's version and browsers.
-FROM mcr.microsoft.com/playwright/python:v1.49.0-noble
+# Start from Python; install Playwright + Chromium into a fixed path.
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Use image's pre-installed browsers (avoid /root/.cache lookup)
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+# Browsers live here so path is consistent at build and runtime
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
 
-# App deps only (no playwright - use image's)
-COPY requirements-docker.txt .
-RUN pip install --no-cache-dir -r requirements-docker.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Chromium + system deps into PLAYWRIGHT_BROWSERS_PATH
+RUN playwright install --with-deps chromium
 
 COPY . .
 EXPOSE 8000
