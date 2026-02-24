@@ -2,6 +2,11 @@
 SCTR Picks API (300 stocks): Scrape StockCharts SCTR Top 300 + yfinance 5D/20D/60D performance.
 Deploy as separate Railway service (Root Directory = api).
 """
+import os
+
+# Use Docker image browser path before Playwright is imported (e.g. fetch_sctr)
+os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "/app/ms-playwright")
+
 import math
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, Dict, List, Optional
