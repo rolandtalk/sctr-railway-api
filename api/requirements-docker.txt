@@ -1,0 +1,6 @@
+# For Docker build: base image already has Playwright + browsers.
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pandas>=2.2.0
+lxml>=5.0.0
+yfinance>=0.2.0
