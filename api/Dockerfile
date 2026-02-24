@@ -5,8 +5,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-# Install Chromium to match the installed Playwright version
-RUN playwright install chromium
+# Install all Playwright browsers (includes chromium + chromium_headless_shell)
+RUN playwright install
 
 COPY . .
 EXPOSE 8000

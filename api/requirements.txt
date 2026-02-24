@@ -1,7 +1,7 @@
 # API service (Railway). Install Playwright browsers in build if needed.
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
-playwright>=1.49.0
+playwright==1.49.0
 pandas>=2.2.0
 lxml>=5.0.0
 yfinance>=0.2.0
