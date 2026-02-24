@@ -163,7 +163,7 @@ function App() {
         )
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Failed to load data'
-        const hint = ' Set VITE_API_URL to your 300-stock API (e.g. http://localhost:8000).'
+        const hint = ' Set VITE_API_URL to your API URL (e.g. your Railway API URL, or http://localhost:8000 for local).'
         setError(msg.includes('VITE_API_URL') ? msg : msg + '.' + hint)
       } finally {
         setLoading(false)
@@ -184,7 +184,7 @@ function App() {
       .catch((e) => {
         if (!cancelled) {
           const msg = e instanceof Error ? e.message : 'Failed to load rebound data'
-          const hint = ' Set VITE_API_URL to your 300-stock API (e.g. http://localhost:8000).'
+          const hint = ' Set VITE_API_URL to your API URL (e.g. your Railway API URL, or http://localhost:8000 for local).'
           setReboundError(msg.includes('VITE_API_URL') ? msg : msg + '.' + hint)
         }
       })

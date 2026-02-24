@@ -15,7 +15,7 @@ async function fetchApi<T>(path: string): Promise<T> {
       throw new Error(err.detail?.error || `API error: ${res.status}`)
     } catch (e) {
       if (e instanceof Error && e.message.startsWith('API error:')) throw e
-      throw new Error(`API error: ${res.status}. Set VITE_API_URL to your 300-stock API (e.g. http://localhost:8000).`)
+      throw new Error(`API error: ${res.status}. Set VITE_API_URL to your API URL (e.g. your Railway API URL, or http://localhost:8000 for local).`)
     }
   }
   try {
@@ -27,7 +27,7 @@ async function fetchApi<T>(path: string): Promise<T> {
           'In Railway, use the URL of the service that runs the Python API (main.py), not the React app.'
       )
     }
-    throw new Error('Invalid API response. Set VITE_API_URL to your 300-stock API (e.g. http://localhost:8000).')
+    throw new Error('Invalid API response. Set VITE_API_URL to your API URL (e.g. your Railway API URL, or http://localhost:8000 for local).')
   }
 }
 
