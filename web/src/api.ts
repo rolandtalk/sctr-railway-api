@@ -1,12 +1,12 @@
-import type { DashboardResponse } from './types'
+import type { DashboardResponse, ReboundResponse } from './types'
 
 // In dev we use same-origin so Vite proxy can forward to Railway (avoids CORS)
 const API_BASE = import.meta.env.PROD
   ? (import.meta.env.VITE_API_URL || '')
   : ''
 
-export async function fetchDashboard(): Promise<DashboardResponse> {
-  const url = `${API_BASE}/api/dashboard`
+async function fetchApi<T>(path: string): Promise<T> {
+  const url = `${API_BASE}${path}`
   const res = await fetch(url)
   const text = await res.text()
   if (!res.ok) {
@@ -19,7 +19,7 @@ export async function fetchDashboard(): Promise<DashboardResponse> {
     }
   }
   try {
-    return JSON.parse(text) as DashboardResponse
+    return JSON.parse(text) as T
   } catch {
     if (text.trim().toLowerCase().startsWith('<!doctype') || text.trim().startsWith('<!')) {
       throw new Error(
@@ -29,4 +29,12 @@ export async function fetchDashboard(): Promise<DashboardResponse> {
     }
     throw new Error('Invalid API response. Set VITE_API_URL to your 300-stock API (e.g. http://localhost:8000).')
   }
+}
+
+export async function fetchDashboard(): Promise<DashboardResponse> {
+  return fetchApi<DashboardResponse>('/api/dashboard')
+}
+
+export async function fetchRebound(): Promise<ReboundResponse> {
+  return fetchApi<ReboundResponse>('/api/rebound')
 }

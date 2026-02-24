@@ -41,6 +41,28 @@ header h1 {
   color: var(--text);
 }
 
+.main-nav {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.main-nav a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.main-nav a:hover {
+  color: var(--text);
+}
+
+.main-nav a.active {
+  color: var(--text);
+  font-weight: 600;
+}
+
 .search-and-pagination {
   display: flex;
   flex-wrap: wrap;
@@ -132,11 +154,38 @@ main {
   justify-content: flex-end;
 }
 
+.table-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .table-title {
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0 0 0.75rem 0;
   color: var(--text);
+}
+
+.table-title-row .table-title {
+  margin-bottom: 0;
+}
+
+.export-btn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.export-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .rebound-table {
@@ -221,6 +270,18 @@ td.negative {
 
 tbody tr:last-child {
   border-bottom: none;
+}
+
+thead tr.stats-row,
+tbody tr.stats-row {
+  background: rgba(0, 0, 0, 0.12);
+  font-weight: 600;
+}
+
+thead tr.stats-row th.rank-symbol,
+tbody tr.stats-row td.rank-symbol,
+tbody tr.stats-row th.rank-symbol {
+  color: var(--text-muted);
 }
 
 .ref-window {

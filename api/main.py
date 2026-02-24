@@ -218,8 +218,8 @@ def api_sctr_top300():
 @app.get("/api/dashboard")
 def api_dashboard():
     """
-    Single endpoint: scrape once (top 300), then fetch all symbols in parallel
-    (one history per symbol → perf + rebound). Returns perf, rebound, qqq.
+    Perf-only: scrape top 300, fetch perf (no rebound). Returns perf, qqq.
+    Rebound is loaded separately via /api/rebound when user enters that page.
     """
     try:
         rows = fetch_sctr_top300()
@@ -234,31 +234,72 @@ def api_dashboard():
     ]
     symbols = [s[1] for s in symbols_with_meta if s[1]]
     perf_list: List[Dict[str, Any]] = []
-    rebound_list: List[Dict[str, Any]] = []
     qqq_data: Optional[Dict[str, Any]] = None
     with ThreadPoolExecutor(max_workers=DASHBOARD_WORKERS) as executor:
-        future_to_idx = {executor.submit(get_symbol_data, sym): (i, sym, name) for (i, sym, name) in symbols_with_meta if sym}
+        future_to_idx = {executor.submit(get_price_performance, sym): (i, sym, name) for (i, sym, name) in symbols_with_meta if sym}
         if "QQQ" not in symbols:
-            future_to_idx[executor.submit(get_symbol_data, "QQQ")] = (-1, "QQQ", "")
+            future_to_idx[executor.submit(get_price_performance, "QQQ")] = (-1, "QQQ", "")
         for future in as_completed(future_to_idx):
             rank, symbol, name = future_to_idx[future]
             try:
-                data = future.result()
+                p = future.result()
             except Exception:
-                data = {"perf": {"perf1d": None, "perf5d": None, "perf20d": None, "perf60d": None, "rsi_14": None}, "rebound": {"ri": None, "p1_pl": None, "p5_pl": None, "d5_d1_gain_ratio": None, "rsi_14": None, "curve_shape": None}}
+                p = {"perf1d": None, "perf5d": None, "perf20d": None, "perf60d": None, "rsi_14": None}
             if symbol == "QQQ":
-                qqq_data = data["perf"]
+                qqq_data = {"perf1d": p.get("perf1d"), "perf5d": p.get("perf5d"), "perf20d": p.get("perf20d"), "perf60d": p.get("perf60d")}
                 continue
             perf_list.append({
                 "rank": rank,
                 "symbol": symbol,
                 "name": name,
-                "perf1d": data["perf"]["perf1d"],
-                "perf5d": data["perf"]["perf5d"],
-                "perf20d": data["perf"]["perf20d"],
-                "perf60d": data["perf"]["perf60d"],
-                "rsi_14": data["perf"]["rsi_14"],
+                "perf1d": p.get("perf1d"),
+                "perf5d": p.get("perf5d"),
+                "perf20d": p.get("perf20d"),
+                "perf60d": p.get("perf60d"),
+                "rsi_14": p.get("rsi_14"),
             })
+    perf_list.sort(key=lambda x: x["rank"])
+    if qqq_data is None:
+        for p in perf_list:
+            if p.get("symbol") == "QQQ":
+                qqq_data = {"perf1d": p.get("perf1d"), "perf5d": p.get("perf5d"), "perf20d": p.get("perf20d"), "perf60d": p.get("perf60d")}
+                break
+    return {
+        "data": {
+            "perf": perf_list,
+            "qqq": qqq_data or {},
+        },
+    }
+
+
+@app.get("/api/rebound")
+def api_rebound():
+    """
+    Rebound only: scrape top 300, then fetch full symbol data (perf + rebound).
+    Called when user enters the Rebound Index sub-page. Returns rebound list.
+    """
+    try:
+        rows = fetch_sctr_top300()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={"error": str(e), "stage": "scrape"},
+        )
+    symbols_with_meta = [
+        (i, row.get("Symbol") or row.get("symbol") or "", row.get("Name") or row.get("name") or "")
+        for i, row in enumerate(rows, start=1)
+    ]
+    rebound_list: List[Dict[str, Any]] = []
+    with ThreadPoolExecutor(max_workers=DASHBOARD_WORKERS) as executor:
+        future_to_idx = {executor.submit(get_symbol_data, sym): (i, sym, name) for (i, sym, name) in symbols_with_meta if sym}
+        for future in as_completed(future_to_idx):
+            rank, symbol, name = future_to_idx[future]
+            if symbol == "QQQ":
+                continue
+            try:
+                data = future.result()
+            except Exception:
+                data = {"rebound": {"ri": None, "p1_pl": None, "p5_pl": None, "d5_d1_gain_ratio": None, "rsi_14": None, "curve_shape": None}}
             rebound_list.append({
                 "rank": rank,
                 "symbol": symbol,
@@ -270,20 +311,8 @@ def api_dashboard():
                 "rsi_14": data["rebound"]["rsi_14"],
                 "curve_shape": data["rebound"]["curve_shape"],
             })
-    perf_list.sort(key=lambda x: x["rank"])
     rebound_list.sort(key=lambda x: x["rank"])
-    if qqq_data is None:
-        for p in perf_list:
-            if p.get("symbol") == "QQQ":
-                qqq_data = {"perf1d": p.get("perf1d"), "perf5d": p.get("perf5d"), "perf20d": p.get("perf20d"), "perf60d": p.get("perf60d")}
-                break
-    return {
-        "data": {
-            "perf": perf_list,
-            "rebound": rebound_list,
-            "qqq": qqq_data or {},
-        },
-    }
+    return {"data": {"rebound": rebound_list}}
 
 
 def run():
